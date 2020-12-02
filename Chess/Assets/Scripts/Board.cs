@@ -1,7 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
+
+// New
+public enum CellState
+{
+    None,
+    Friendly,
+    Enemy,
+    Free,
+    OutOfBounds
+}
 
 public class Board : MonoBehaviour
 {
@@ -10,41 +19,69 @@ public class Board : MonoBehaviour
     [HideInInspector]
     public Cell[,] mAllCells = new Cell[8, 8];
 
-    //Board is created here
+    // We create the board here, no surprise
     public void Create()
     {
-        //2x for loops to fill the board
-        for (int i = 0; i < 8; i++)
+        #region Create
+        for (int y = 0; y < 8; y++)
         {
-            for (int j = 0; j < 8; j++)
+            for (int x = 0; x < 8; x++)
             {
-                //Creating a new cell
+                // Create the cell
                 GameObject newCell = Instantiate(mCellPrefab, transform);
 
-                //Setting position
+                // Position
                 RectTransform rectTransform = newCell.GetComponent<RectTransform>();
-                rectTransform.anchoredPosition = new Vector2((i * 100) + 400, (j * 100));
+                rectTransform.anchoredPosition = new Vector2((x * 100) + 50, (y * 100) + 50);
 
-                //Actual setup
-                mAllCells[i, j] = newCell.GetComponent<Cell>();
-                mAllCells[i, j].Setup(new Vector2Int(i, j), this);
+                // Setup
+                mAllCells[x, y] = newCell.GetComponent<Cell>();
+                mAllCells[x, y].Setup(new Vector2Int(x, y), this);
             }
         }
+        #endregion
 
-        //Now we create 'checkerboard' pattern
-        for (int i = 0; i < 8; i += 2)
+        #region Color
+        for (int x = 0; x < 8; x += 2)
         {
-            for (int j = 0; j < 8; j++)
+            for (int y = 0; y < 8; y++)
             {
-                //Creating the offset for every other line
-                int offset = (j % 2 != 0) ? 0 : 1; //Checking if the line is even
-                int finalX = i + offset; //If the value is odd, we need to add an offset
+                // Offset for every other line
+                int offset = (y % 2 != 0) ? 0 : 1;
+                int finalX = x + offset;
 
-                //Coloring
-                mAllCells[finalX, j].GetComponent<Image>().color = new Color32(230, 220, 197, 255);
+                // Color
+                mAllCells[finalX, y].GetComponent<Image>().color = new Color32(230, 220, 187, 255);
             }
         }
+        #endregion
     }
 
+    // New
+    public CellState ValidateCell(int targetX, int targetY, BasePiece checkingPiece)
+    {
+        // Bounds check
+        if (targetX < 0 || targetX > 7)
+            return CellState.OutOfBounds;
 
+        if (targetY < 0 || targetY > 7)
+            return CellState.OutOfBounds;
+
+        // Get cell
+        Cell targetCell = mAllCells[targetX, targetY];
+
+        // If the cell has a piece
+        if (targetCell.mCurrentPiece != null)
+        {
+            // If friendly
+            if (checkingPiece.mColor == targetCell.mCurrentPiece.mColor)
+                return CellState.Friendly;
+
+            // If enemy
+            if (checkingPiece.mColor != targetCell.mCurrentPiece.mColor)
+                return CellState.Enemy;
+        }
+
+        return CellState.Free;
+    }
 }

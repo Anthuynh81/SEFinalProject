@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class Cell : MonoBehaviour
@@ -14,12 +12,22 @@ public class Cell : MonoBehaviour
     [HideInInspector]
     public RectTransform mRectTransform = null;
 
-    //Setup function is called when the object is created
+    [HideInInspector]
+    public BasePiece mCurrentPiece = null;
+
     public void Setup(Vector2Int newBoardPosition, Board newBoard)
     {
         mBoardPosition = newBoardPosition;
         mBoard = newBoard;
 
         mRectTransform = GetComponent<RectTransform>();
+    }
+
+    public void RemovePiece()
+    {
+        if (mCurrentPiece != null)
+        {
+            mCurrentPiece.Kill();
+        }
     }
 }
