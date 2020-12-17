@@ -158,6 +158,11 @@ public abstract class BasePiece : EventTrigger
         // If there is an enemy piece, remove it
         mTargetCell.RemovePiece();
 
+        //Adds the move to move list
+        string currentPiece = this + "";
+        currentPiece = currentPiece.Substring(17, (currentPiece.Length - 18));
+        mPieceManager.addMove(currentPiece, mTargetCell.mBoardPosition);
+
         // Clear current
         mCurrentCell.mCurrentPiece = null;
 

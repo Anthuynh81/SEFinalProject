@@ -1,17 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+//using static System.Random;
+using Random=UnityEngine.Random;
+
 
 public class PieceManager : MonoBehaviour
 {
     [HideInInspector]
     public bool mIsKingAlive = true;
 
+    public bool newGame = false;
+
+    public GameObject mGameOver;
+
     public GameObject mPiecePrefab;
 
     private List<BasePiece> mWhitePieces = null;
     private List<BasePiece> mBlackPieces = null;
     private List<BasePiece> mPromotedPieces = new List<BasePiece>();
+
+    private string gameTitle;
+    private List<string> moves;
 
     private string[] mPieceOrder = new string[16]
     {
@@ -29,20 +39,41 @@ public class PieceManager : MonoBehaviour
         {"Q",  typeof(Queen)}
     };
 
-    public void Setup(Board board)
+    public void Setup(Board board, string GameMode)
     {
-        // Create white pieces
-        mWhitePieces = CreatePieces(Color.white, new Color32(80, 124, 159, 255));
+        if ((String.Compare(GameMode, "random")) == 0)
+        {
+            Debug.Log(GameMode);
+            // Create white pieces
+            mWhitePieces = CreateRandomPieces(Color.white, new Color32(80, 124, 159, 255));
 
-        // Create place pieces
-        mBlackPieces = CreatePieces(Color.black, new Color32(210, 95, 64, 255));
+            // Create black pieces
+            mBlackPieces = CreateRandomPieces(Color.black, new Color32(210, 95, 64, 255));
 
-        // Place pieces
-        PlacePieces(1, 0, mWhitePieces, board);
-        PlacePieces(6, 7, mBlackPieces, board);
+            // Place pieces
+            PlacePieces(1, 0, mWhitePieces, board);
+            PlacePieces(6, 7, mBlackPieces, board);
 
-        // White goes first
-        SwitchSides(Color.black);
+            // White goes first
+            SwitchSides(Color.black);
+        }
+        else
+        {
+            Debug.Log(GameMode);
+            // Create white pieces
+            mWhitePieces = CreatePieces(Color.white, new Color32(80, 124, 159, 255));
+
+            // Create black pieces
+            mBlackPieces = CreatePieces(Color.black, new Color32(210, 95, 64, 255));
+
+            // Place pieces
+            PlacePieces(1, 0, mWhitePieces, board);
+            PlacePieces(6, 7, mBlackPieces, board);
+
+            // White goes first
+            SwitchSides(Color.black);
+        }
+        moves = new List<string>();
     }
 
     private List<BasePiece> CreatePieces(Color teamColor, Color32 spriteColor)
@@ -63,6 +94,52 @@ public class PieceManager : MonoBehaviour
             newPiece.Setup(teamColor, spriteColor, this);
         }
 
+        return newPieces;
+    }
+
+    private List<BasePiece> CreateRandomPieces(Color teamColor, Color32 spriteColor)
+    {
+        List<BasePiece> newPieces = new List<BasePiece>();
+        //Random rnd = new Random();
+        for (int i = 0; i < 8; i++)
+        {
+            // Get the type
+            string key = mPieceOrder[i];
+            Type pieceType = mPieceLibrary[key];
+
+            // Create
+            BasePiece newPiece = CreatePiece(pieceType);
+            newPieces.Add(newPiece);
+
+            // Setup
+            newPiece.Setup(teamColor, spriteColor, this);
+
+
+        }
+        List<int> array1 = new List<int>();
+        for (int i = 0; i < 8; i++)
+        {
+            int ran = Random.Range(8, 16);
+
+            bool containsNum = array1.Contains(ran);
+            while (containsNum && array1.Count < 9){
+                ran = Random.Range(8, 16);
+                containsNum = array1.Contains(ran);
+            }
+
+            array1.Add(ran);
+                // Get the type
+                string key = mPieceOrder[ran];
+                Type pieceType = mPieceLibrary[key];
+
+                // Create
+                BasePiece newPiece = CreatePiece(pieceType);
+                newPieces.Add(newPiece);
+
+                // Setup
+                newPiece.Setup(teamColor, spriteColor, this);
+
+        }
         return newPieces;
     }
 
@@ -126,8 +203,13 @@ public class PieceManager : MonoBehaviour
 
     public void SwitchSides(Color color)
     {
+        bool isBlackTurn = color == Color.white ? true : false;
+
         if (!mIsKingAlive)
         {
+            mGameOver.SetActive(true);
+            mGameOver.GetComponent<GameOverScript>().SetText(isBlackTurn ? "Black" : "White", moves);
+
             // Reset pieces
             ResetPieces();
 
@@ -138,7 +220,7 @@ public class PieceManager : MonoBehaviour
             color = Color.black;
         }
 
-        bool isBlackTurn = color == Color.white ? true : false;
+        isBlackTurn = color == Color.white ? true : false;
 
         // Set team interactivity
         SetInteractive(mWhitePieces, !isBlackTurn);
@@ -193,5 +275,38 @@ public class PieceManager : MonoBehaviour
 
         // Add
         mPromotedPieces.Add(promotedPiece);
+    }
+
+    public void addMove(string piece, Vector2Int position)
+    {
+        char letter = (char)(position.x + 65);
+        int num = position.y + 1;
+        string move;
+        switch (piece)
+        {
+            case "Pawn":
+                move = "P." + letter + num;
+                break;
+            case "Rook":
+                move = "R." + letter + num;
+                break;
+            case "Bishop":
+                move = "B." + letter + num;
+                break;
+            case "Knight":
+                move = "KN." + letter + num;
+                break;
+            case "Queen":
+                move = "Q." + letter + num;
+                break;
+            case "King":
+                move = "K." + letter + num;
+                break;
+            default:
+                move = "error";
+                break;
+        }
+
+        moves.Add(move);
     }
 }

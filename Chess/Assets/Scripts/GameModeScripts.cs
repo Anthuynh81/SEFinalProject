@@ -9,4 +9,8 @@ public class GameModeScripts : MonoBehaviour
     {
         SceneManager.LoadScene("Classic");
     }
+    public void RandomMode()
+    {
+        SceneManager.LoadScene("Random");
+    }
 }

@@ -64,11 +64,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\GameOverScript.cs" />
+    <Compile Include="Assets\HistoryMenuScript.cs" />
     <Compile Include="Assets\Scripts\Board.cs" />
     <Compile Include="Assets\Scripts\Cell.cs" />
     <Compile Include="Assets\Scripts\CustomCursor.cs" />
+    <Compile Include="Assets\Scripts\GameHistory\GameHistoryControl.cs" />
+    <Compile Include="Assets\Scripts\GameHistory\GameHistoryText.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\GameModeScripts.cs" />
+    <Compile Include="Assets\Scripts\HistoryData.cs" />
     <Compile Include="Assets\Scripts\MainMenu.cs" />
     <Compile Include="Assets\Scripts\PieceManager.cs" />
     <Compile Include="Assets\Scripts\Pieces\BasePiece.cs" />
@@ -79,6 +84,8 @@
     <Compile Include="Assets\Scripts\Pieces\Queen.cs" />
     <Compile Include="Assets\Scripts\Pieces\Rook.cs" />
     <Compile Include="Assets\Scripts\PopUpScript.cs" />
+    <Compile Include="Assets\Scripts\SelectGame\SelectGameButton.cs" />
+    <Compile Include="Assets\Scripts\SelectGame\SelectGameControl.cs" />
     <Compile Include="Assets\Scripts\SettingsMenu.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01.cs" />
     <Compile Include="Assets\TextMesh Pro\Examples &amp; Extras\Scripts\Benchmark01_UGUI.cs" />

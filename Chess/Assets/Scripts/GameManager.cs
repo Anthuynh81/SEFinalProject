@@ -1,9 +1,15 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+using System;
 
 public class GameManager : MonoBehaviour
 {
+    [SerializeField]
+    public string GameMode;
+
     public Board mBoard;
     public PieceManager mPieceManager;
     public bool inMenu = false;
@@ -17,7 +23,7 @@ public class GameManager : MonoBehaviour
         mBoard.Create();
 
         // Create pieces
-        mPieceManager.Setup(mBoard);
+        mPieceManager.Setup(mBoard, GameMode);
     }
 
     void Update()
