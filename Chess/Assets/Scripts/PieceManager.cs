@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 //using static System.Random;
 using Random=UnityEngine.Random;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 
 public class PieceManager : MonoBehaviour
@@ -20,7 +22,7 @@ public class PieceManager : MonoBehaviour
     private List<BasePiece> mBlackPieces = null;
     private List<BasePiece> mPromotedPieces = new List<BasePiece>();
 
-    private string gameTitle;
+    public string piece;
     private List<string> moves;
 
     private string[] mPieceOrder = new string[16]
@@ -36,14 +38,27 @@ public class PieceManager : MonoBehaviour
         {"KN", typeof(Knight)},
         {"B",  typeof(Bishop)},
         {"K",  typeof(King)},
-        {"Q",  typeof(Queen)}
+        {"Q",  typeof(Queen)},
+        {"BR", typeof(Baron)},
+        {"E", typeof(Esquier)}
+    };
+
+    private Dictionary<string, Type> mCustomPieceLibrary = new Dictionary<string, Type>()
+    {
+        {"Pawn",  typeof(Pawn)},
+        {"Rook",  typeof(Rook)},
+        {"Knight", typeof(Knight)},
+        {"Bishop",  typeof(Bishop)},
+        {"King",  typeof(King)},
+        {"Queen",  typeof(Queen)},
+        {"Baron", typeof(Baron)},
+        {"Esquier", typeof(Esquier)}
     };
 
     public void Setup(Board board, string GameMode)
     {
         if ((String.Compare(GameMode, "random")) == 0)
         {
-            Debug.Log(GameMode);
             // Create white pieces
             mWhitePieces = CreateRandomPieces(Color.white, new Color32(80, 124, 159, 255));
 
@@ -57,14 +72,28 @@ public class PieceManager : MonoBehaviour
             // White goes first
             SwitchSides(Color.black);
         }
-        else
+        else if(((String.Compare(GameMode, "classic")) == 0))
         {
-            Debug.Log(GameMode);
             // Create white pieces
             mWhitePieces = CreatePieces(Color.white, new Color32(80, 124, 159, 255));
 
             // Create black pieces
             mBlackPieces = CreatePieces(Color.black, new Color32(210, 95, 64, 255));
+
+            // Place pieces
+            PlacePieces(1, 0, mWhitePieces, board);
+            PlacePieces(6, 7, mBlackPieces, board);
+
+            // White goes first
+            SwitchSides(Color.black);
+        }
+        else if (((String.Compare(GameMode, "custom")) == 0))
+        {
+            // Create white pieces
+            mWhitePieces = CreateCustomPieces(Color.white, new Color32(80, 124, 159, 255), piece);
+
+            // Create black pieces
+            mBlackPieces = CreateCustomPieces(Color.black, new Color32(210, 95, 64, 255), piece);
 
             // Place pieces
             PlacePieces(1, 0, mWhitePieces, board);
@@ -94,6 +123,56 @@ public class PieceManager : MonoBehaviour
             newPiece.Setup(teamColor, spriteColor, this);
         }
 
+        return newPieces;
+    }
+    private List<BasePiece> CreateCustomPieces(Color teamColor, Color32 spriteColor, string piece)
+    {
+        List<BasePiece> newPieces = new List<BasePiece>();
+
+        string redPath = Application.persistentDataPath + "/Red.chess";
+        string bluePath = Application.persistentDataPath + "/Blue.chess";
+
+        BinaryFormatter formatter = new BinaryFormatter();
+        FileStream streamRed = new FileStream(redPath, FileMode.Open);
+        string[] mRedPieceOrder = formatter.Deserialize(streamRed) as string[];
+        streamRed.Close();
+
+        FileStream streamBlue = new FileStream(bluePath, FileMode.Open);
+        string[] mBluePieceOrder = formatter.Deserialize(streamBlue) as string[];
+        streamBlue.Close();
+
+        if(teamColor == Color.black)
+        {
+            for (int i = 0; i < mBluePieceOrder.Length; i++)
+                    {
+                        // Get the type
+                        string key = mBluePieceOrder[i];
+                        Type pieceType = mCustomPieceLibrary[key];
+
+                        // Create
+                        BasePiece newPiece = CreatePiece(pieceType);
+                        newPieces.Add(newPiece);
+
+                        // Setup
+                        newPiece.Setup(teamColor, spriteColor, this);
+                    }
+        }else if(teamColor == Color.white)
+        {
+            for (int i = 0; i < mRedPieceOrder.Length; i++)
+            {
+                // Get the type
+                string key = mRedPieceOrder[i];
+                Type pieceType = mCustomPieceLibrary[key];
+
+                // Create
+                BasePiece newPiece = CreatePiece(pieceType);
+                newPieces.Add(newPiece);
+
+                // Setup
+                newPiece.Setup(teamColor, spriteColor, this);
+            }
+        }
+        
         return newPieces;
     }
 
@@ -177,30 +256,6 @@ public class PieceManager : MonoBehaviour
             piece.enabled = value;
     }
 
-    /*
-    private void MoveRandomPiece()
-    {
-        BasePiece finalPiece = null;
-
-        while (!finalPiece)
-        {
-            // Get piece
-            int i = UnityEngine.Random.Range(0, mBlackPieces.Count);
-            BasePiece newPiece = mBlackPieces[i];
-
-            // Does this piece have any moves?
-            if (!newPiece.HasMove())
-                continue;
-
-            // Is piece active?
-            if (newPiece.gameObject.activeInHierarchy)
-                finalPiece = newPiece;
-        }
-
-        finalPiece.ComputerMove();
-    }
-    */
-
     public void SwitchSides(Color color)
     {
         bool isBlackTurn = color == Color.white ? true : false;
@@ -236,12 +291,6 @@ public class PieceManager : MonoBehaviour
 
             piece.enabled = isPartOfTeam;
         }
-
-        // ADDED: Move random piece
-        /*
-        if (isBlackTurn)
-            MoveRandomPiece();
-        */
     }
 
     public void ResetPieces()
@@ -265,6 +314,22 @@ public class PieceManager : MonoBehaviour
     {
         // Kill Pawn
         pawn.Kill();
+
+        // Create
+        BasePiece promotedPiece = CreatePiece(typeof(Queen));
+        promotedPiece.Setup(teamColor, spriteColor, this);
+
+        // Place piece
+        promotedPiece.Place(cell);
+
+        // Add
+        mPromotedPieces.Add(promotedPiece);
+    }
+
+    public void PromotePiece(Esquier esquier, Cell cell, Color teamColor, Color spriteColor)
+    {
+        // Kill Pawn
+        esquier.Kill();
 
         // Create
         BasePiece promotedPiece = CreatePiece(typeof(Queen));
@@ -301,6 +366,12 @@ public class PieceManager : MonoBehaviour
                 break;
             case "King":
                 move = "K." + letter + num;
+                break;
+            case "Esquier":
+                move = "E." + letter + num;
+                break;
+            case "Baron":
+                move = "Ba." + letter + num;
                 break;
             default:
                 move = "error";

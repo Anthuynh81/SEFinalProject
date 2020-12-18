@@ -30,7 +30,7 @@ public class GameOverScript : MonoBehaviour
 
 
         moves = new List<string>();
-        textObject.text = "Checkmate!, " + myText + " has won. Would you like to save your game?";
+        textObject.text = "Checkmate! " + myText + " has won. Would you like to save your game?";
         moves = move;
         isActive = true;
     }
